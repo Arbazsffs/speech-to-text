@@ -130,7 +130,6 @@ function saveToHistory(text, lang) {
 function renderHistory() {
   if (sessionHistory.length === 0) {
     historyEmpty.style.display = '';
-    // Remove all items
     [...historyList.querySelectorAll('.history-item')].forEach(el => el.remove());
     return;
   }
@@ -201,10 +200,11 @@ function initRecognition() {
     let interimText = '';
     let finalSentence = '';
 
+    // Mobile Bug Fix: Append final results instead of overwriting to prevent dropping/replacing words
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const transcript = event.results[i][0].transcript;
       if (event.results[i].isFinal) {
-        finalSentence = transcript;
+        finalSentence += transcript; 
       } else {
         interimText += transcript;
       }
@@ -240,23 +240,32 @@ function initRecognition() {
 
   /* ── Error handler ── */
   const errorMessages = {
-    'not-allowed': 'Microphone access denied. Click the lock icon in your address bar.',
-    'no-speech': 'No speech detected. Try speaking closer to your mic.',
-    'network': 'Network error. Check your connection and try again.',
-    'audio-capture': 'No microphone found. Please connect a mic and try again.',
-    'aborted': null, // silent
+    'not-allowed': 'Microphone access denied. Check browser permissions.',
+    'no-speech': null, // Mobile often throws this silently on pauses
+    'network': 'Network error. Check your connection.',
+    'audio-capture': 'No microphone found.',
+    'aborted': null, 
   };
 
   recognition.onerror = (event) => {
     const message = errorMessages[event.error];
     if (message) showToast(message, 4000);
-    if (event.error !== 'aborted') stopRecording();
+    
+    // Stop recording state strictly on hard errors so auto-restart doesn't loop forever
+    if (event.error !== 'aborted' && event.error !== 'no-speech') {
+        stopRecording();
+    }
   };
 
-  /* ── Auto-restart if engine cuts off mid-session ── */
+  /* ── Auto-restart (Mobile Bug Fix) ── */
   recognition.onend = () => {
     if (isRecording) {
-      try { recognition.start(); } catch (_) { }
+      // Small debounce prevents rapid looping and native hardware "beeping" on mobile
+      setTimeout(() => {
+        if (isRecording) {
+          try { recognition.start(); } catch (_) {}
+        }
+      }, 350);
     }
   };
 }
@@ -274,13 +283,16 @@ function startRecording() {
     setRecordingUI(true);
     startClock();
   } catch (err) {
-    showToast(`Mic error: ${err.message}`, 4000);
+    // Failsafe if already started
+    if (err.name !== 'InvalidStateError') {
+      showToast(`Mic error: ${err.message}`, 4000);
+    }
   }
 }
 
 function stopRecording() {
   if (!recognition) return;
-  isRecording = false;
+  isRecording = false; // Set to false first to prevent auto-restart loop
   recognition.stop();
   setStatus(STATUS.IDLE);
   setRecordingUI(false);
@@ -297,8 +309,6 @@ stopBtn.addEventListener('click', stopRecording);
 /* ─────────────────────────────────
    ACTION BUTTONS
 ───────────────────────────────── */
-
-/* Clear transcript */
 clearBtn.addEventListener('click', () => {
   fullTranscript = '';
   transcriptEl.value = '';
@@ -306,7 +316,6 @@ clearBtn.addEventListener('click', () => {
   showToast('Transcript cleared');
 });
 
-/* Copy to clipboard */
 copyBtn.addEventListener('click', () => {
   const text = transcriptEl.value.trim();
   if (!text) { showToast('Nothing to copy'); return; }
@@ -314,14 +323,12 @@ copyBtn.addEventListener('click', () => {
   navigator.clipboard.writeText(text)
     .then(() => showToast('Copied to clipboard!'))
     .catch(() => {
-      // Fallback for older browsers
       transcriptEl.select();
       document.execCommand('copy');
       showToast('Copied!');
     });
 });
 
-/* Download as .txt */
 downloadBtn.addEventListener('click', () => {
   const text = transcriptEl.value.trim();
   if (!text) { showToast('Nothing to download'); return; }
@@ -337,22 +344,17 @@ downloadBtn.addEventListener('click', () => {
   showToast('Saved as .txt!');
 });
 
-/* Clear history */
 clearHistoryBtn.addEventListener('click', () => {
   sessionHistory = [];
   renderHistory();
   showToast('History cleared');
 });
 
-/* Live typing updates counts */
 transcriptEl.addEventListener('input', () => {
   fullTranscript = transcriptEl.value;
   updateCounts(fullTranscript);
 });
-/* ─────────────────────────────────
-   KEYBOARD SHORTCUT — Space to record/stop
-   (only fires when not focused on an input)
-───────────────────────────────── */
+
 document.addEventListener('keydown', (e) => {
   const tag = document.activeElement?.tagName;
   if (tag === 'TEXTAREA' || tag === 'INPUT' || tag === 'SELECT') return;
@@ -362,5 +364,6 @@ document.addEventListener('keydown', (e) => {
     else if (!stopBtn.disabled) stopRecording();
   }
 });
+
 renderHistory();
 updateCounts('');

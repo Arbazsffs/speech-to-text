@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>VoiceNotes Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
@@ -14,12 +14,10 @@
 
 <body>
 
-  <!-- Background grid texture -->
   <div class="bg-grid" aria-hidden="true"></div>
 
   <div class="layout">
 
-    <!-- ── Sidebar ── -->
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-icon" aria-hidden="true">
@@ -53,6 +51,7 @@
             <option value="es-ES">Español</option>
             <option value="ar-SA">عربي</option>
             <option value="ur-PK">اردو</option>
+            <option value="ps-AF">پښتو</option>
             <option value="fa-IR">فارسی</option>
             <option value="zh-CN">普通话</option>
             <option value="hi-IN">हिन्दी</option>
@@ -84,17 +83,13 @@
 
       <div class="sidebar-footer">
         <p>Speech stays on-device.</p>
-        <p>Translation via MyMemory API.</p>
       </div>
     </aside>
 
-    <!-- ── Main ── -->
     <main class="main">
 
-      <!-- Recorder Unit -->
       <section class="recorder-unit" id="recorder-unit" aria-label="Recorder">
 
-        <!-- VU Meter / Waveform -->
         <div class="vu-section" aria-hidden="true">
           <div class="vu-label">INPUT LEVEL</div>
           <div class="vu-bars" id="vu-bars">
@@ -121,14 +116,12 @@
           </div>
         </div>
 
-        <!-- Status Strip -->
         <div class="status-strip">
           <div class="status-led" id="status-led" aria-hidden="true"></div>
           <span class="status-text" id="status-text" role="status" aria-live="polite">STANDBY</span>
           <span class="status-clock" id="status-clock" aria-hidden="true">00:00</span>
         </div>
 
-        <!-- Control Buttons -->
         <div class="controls" role="group" aria-label="Recording controls">
           <button class="btn btn-record" id="start-btn" aria-label="Start recording">
             <span class="btn-icon" aria-hidden="true">●</span>
@@ -167,7 +160,6 @@
         </div>
       </section>
 
-      <!-- Transcript Area -->
       <section class="transcript-section" aria-label="Transcript">
         <div class="transcript-header">
           <span class="transcript-label">TRANSCRIPT</span>
@@ -182,7 +174,6 @@
           aria-label="Transcript text"></textarea>
       </section>
 
-      <!-- History Panel -->
       <section class="history-section" aria-label="Session history">
         <div class="history-header">
           <span class="history-label">SESSION HISTORY</span>
@@ -194,13 +185,16 @@
           </div>
         </div>
       </section>
+      
+      <footer class="app-footer">
+        Created by Arbaz Khan
+      </footer>
+
     </main>
   </div>
 
-  <!-- Toast notification -->
   <div class="toast" id="toast" role="alert" aria-live="assertive" aria-atomic="true"></div>
 
-  <!-- Unsupported browser overlay -->
   <div class="unsupported-overlay" id="unsupported-overlay" hidden>
     <div class="unsupported-box">
       <div class="unsupported-icon" aria-hidden="true">⚠</div>
